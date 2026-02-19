@@ -7,8 +7,8 @@ This guide walks you through each step with descriptions of what you'll see.
 ## Part 1: Canvas API Token
 
 ### Step 1.1: Login to Canvas
-- Go to: https://canvas.nus.edu.sg
-- Login with your NUS credentials
+- Go to: https://canvas.nus.edu.sg - or any school
+- Login with your credentials
 
 ### Step 1.2: Navigate to Settings
 - Look at the left sidebar
@@ -102,7 +102,7 @@ This guide walks you through each step with descriptions of what you'll see.
 
 **Add Secret #2:**
 - Name: `GMAIL_ADDRESS`
-- Secret: [Type your Gmail address, e.g., joel@gmail.com]
+- Secret: [Type your Gmail address, e.g., blah@gmail.com]
 - Click **"Add secret"**
 
 **Add Secret #3:**
