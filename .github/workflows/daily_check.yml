@@ -1,0 +1,51 @@
+name: Daily Canvas File Check
+
+on:
+  schedule:
+    # Runs every day at 8 AM Singapore Time (SGT = UTC+8, so 00:00 UTC)
+    # Adjust the cron schedule to your preferred time
+    - cron: '0 0 * * *'
+
+  # Allows manual triggering from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  check-canvas:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Canvas tracker
+      env:
+        CANVAS_API_TOKEN: ${{ secrets.CANVAS_API_TOKEN }}
+        GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+        GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      run: |
+        python canvas_tracker.py
+
+    - name: Commit updated seen files
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add seen_files.json courses_config.json
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update seen files - $(date +'%Y-%m-%d %H:%M:%S')"
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
