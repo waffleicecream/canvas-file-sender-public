@@ -176,6 +176,12 @@ def send_email_with_attachments(course_name, files, part_num=None, total_parts=N
     for file_info in files:
         body += f"- {file_info['display_name']}\n"
         body += f"  Uploaded: {file_info['created_at']}\n\n"
+        if file_info.get('too_large'):
+            body += (
+                f"  (File is {file_info['size_mb']:.1f} MB — too large to attach. "
+                f"Download from Canvas: {file_info['canvas_url']})\n"
+            )
+        body += "\n"
 
     msg.attach(MIMEText(body, 'plain'))
 
@@ -413,12 +419,26 @@ def process_new_files(selected_ids=None):
             # Download files and prepare info
             files_info = []
             for file in new_files:
-                file_path = download_file(file['url'], file['display_name'], temp_dir)
+                file_size_bytes = file.get('size', 0)
+                too_large = file_size_bytes > MAX_EMAIL_SIZE_MB * 1024 * 1024
+
+                if too_large:
+                    file_path = None
+                    logger.info(
+                        "File '%s' is %.1f MB — too large to attach, will send link",
+                        file['display_name'], file_size_bytes / (1024 * 1024)
+                    )
+                else:
+                    file_path = download_file(file['url'], file['display_name'], temp_dir)
+
                 files_info.append({
                     'id': str(file['id']),
                     'display_name': file['display_name'],
                     'created_at': file.get('created_at', 'Unknown'),
-                    'local_path': file_path
+                    'local_path': file_path,
+                    'too_large': too_large,
+                    'size_mb': file_size_bytes / (1024 * 1024),
+                    'canvas_url': file.get('html_url', ''),
                 })
 
             # Split into batches if needed
